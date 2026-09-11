@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}GreenBEE — Rent a Friend, Anytime{% endblock %}</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          ink: '#14181A',
+          green: { DEFAULT: '#1E8449', dark: '#145A30', light: '#34C069' },
+          charcoal: { DEFAULT: '#1C1F1D', light: '#3A403C' },
+          cloth: '#F7F8F6'
+        },
+        fontFamily: {
+          display: ['Poppins', 'sans-serif'],
+          body: ['Inter', 'sans-serif']
+        }
+      }
+    }
+  }
+</script>
+</head>
+<body class="bg-cloth text-ink font-body">
+{% block content %}{% endblock %}
+<script>
+  const GOOGLE_CLIENT_ID = "{{ google_client_id }}";
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

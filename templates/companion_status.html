@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}My availability — GreenBEE{% endblock %}
+{% block content %}
+
+<header class="border-b border-green/10">
+  <div class="max-w-lg mx-auto px-6 py-5 flex items-center gap-2">
+    <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="GreenBEE" class="h-14 w-auto object-contain">
+    <span class="font-display font-extrabold text-xl tracking-tight"><span class="text-green">Green</span><span class="text-ink">BEE</span></span>
+    <a href="/" class="ml-auto text-sm text-green-dark font-medium hover:text-green transition-colors">Back to home</a>
+  </div>
+</header>
+
+<section class="max-w-lg mx-auto px-6 pt-14 pb-24">
+  <h1 class="font-display font-bold text-2xl text-green-dark mb-1">My availability</h1>
+  <p id="companion-name" class="text-ink/60 mb-8 text-sm"></p>
+
+  <div class="bg-white rounded-2xl border border-green/10 p-6">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <p class="text-xs font-medium text-ink/50 mb-1">Current status</p>
+        <p id="status-pill" class="inline-flex items-center gap-1.5 font-display font-semibold text-sm rounded-full px-3 py-1"></p>
+      </div>
+      <button id="toggle-btn" class="bg-green hover:bg-green-dark text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
+        ...
+      </button>
+    </div>
+    <p id="toggle-hint" class="text-xs text-ink/50"></p>
+    <p id="toggle-error" class="hidden text-xs text-red-600 mt-3"></p>
+  </div>
+
+  <div class="mt-6 bg-white rounded-2xl border border-green/10 p-5 text-xs text-ink/60 leading-relaxed">
+    <p class="font-semibold text-ink mb-1">How this works</p>
+    <p>Turning your availability <b>ON</b> shares your current location so clients can find you nearby.
+       Turning it <b>OFF</b> hides your profile from all searches completely.
+       While you're inside an active booking, clients will always see you as <b>Busy</b> - during the 1-hour
+       gap right after a booking ends, this same switch still controls whether you're shown.</p>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const COMPANION_ID = {{ companion_id }};
+
+const statusPill = document.getElementById("status-pill");
+const toggleBtn = document.getElementById("toggle-btn");
+const toggleHint = document.getElementById("toggle-hint");
+const toggleErr = document.getElementById("toggle-error");
+
+function renderStatus(data) {
+  document.getElementById("companion-name").textContent = data.full_name || "";
+  const busy = data.current_status === "Busy";
+  const shown = !!data.is_available;
+
+  if (busy) {
+    statusPill.textContent = "Busy (in a booking)";
+    statusPill.className = "inline-flex items-center gap-1.5 font-display font-semibold text-sm rounded-full px-3 py-1 bg-amber-100 text-amber-700";
+  } else if (shown) {
+    statusPill.textContent = "Available (Shown)";
+    statusPill.className = "inline-flex items-center gap-1.5 font-display font-semibold text-sm rounded-full px-3 py-1 bg-green-light/25 text-green-dark";
+  } else {
+    statusPill.textContent = "Hidden";
+    statusPill.className = "inline-flex items-center gap-1.5 font-display font-semibold text-sm rounded-full px-3 py-1 bg-ink/10 text-ink/50";
+  }
+
+  toggleBtn.textContent = shown ? "Hide me from customers" : "Show my availability";
+  toggleHint.textContent = shown
+    ? "Customers can currently find you in nearby search."
+    : "You're hidden - customers cannot find you until you show yourself again.";
+}
+
+async function loadStatus() {
+  const res = await fetch(`/api/companions/${COMPANION_ID}/status`);
+  const data = await res.json();
+  if (data.error) { toggleErr.textContent = data.error; toggleErr.classList.remove("hidden"); return; }
+  renderStatus(data);
+}
+
+toggleBtn.addEventListener("click", () => {
+  toggleErr.classList.add("hidden");
+  const turningOn = toggleBtn.textContent.includes("Show");
+
+  const send = (lat, lng) => {
+    fetch(`/api/companions/${COMPANION_ID}/availability`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_available: turningOn, latitude: lat, longitude: lng })
+    })
+      .then(res => res.json())
+      .then(result => {
+        if (result.error) {
+          toggleErr.textContent = result.error;
+          toggleErr.classList.remove("hidden");
+          return;
+        }
+        loadStatus();
+      })
+      .catch(() => {
+        toggleErr.textContent = "Network error - please try again.";
+        toggleErr.classList.remove("hidden");
+      });
+  };
+
+  if (turningOn) {
+    // Show karte waqt current location auto-update honi chahiye
+    if (!navigator.geolocation) {
+      toggleErr.textContent = "Geolocation not supported on this device.";
+      toggleErr.classList.remove("hidden");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => send(pos.coords.latitude, pos.coords.longitude),
+      () => {
+        toggleErr.textContent = "Location access denied - availability ON karne ke liye location zaroori hai.";
+        toggleErr.classList.remove("hidden");
+      }
+    );
+  } else {
+    send(null, null);
+  }
+});
+
+loadStatus();
+</script>
+{% endblock %}

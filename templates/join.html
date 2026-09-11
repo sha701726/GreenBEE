@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Join as a Companion — GreenBEE{% endblock %}
+{% block content %}
+
+<header class="border-b border-green/10">
+  <div class="max-w-3xl mx-auto px-6 py-5 flex items-center gap-2">
+    <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="GreenBEE" class="h-16 w-auto object-contain">
+    <span class="font-display font-extrabold text-2xl tracking-tight"><span class="text-green">Green</span><span class="text-ink">BEE</span></span>
+    <a href="/" class="ml-auto text-sm text-green-dark font-medium hover:text-green transition-colors">Back to home</a>
+  </div>
+</header>
+
+<section class="max-w-3xl mx-auto px-6 pt-14 pb-24">
+  <p class="uppercase tracking-[0.2em] text-xs text-green font-semibold mb-3">Association-trained companions</p>
+  <h1 class="font-display font-bold text-3xl text-green-dark mb-2">Register as a companion</h1>
+  <p class="text-ink/60 mb-10 max-w-lg">
+    Fill in your details below. Your profile stays hidden from clients until our team
+    completes background verification.
+  </p>
+
+  <!-- GOOGLE VERIFIED EMAIL -->
+  <div class="bg-white rounded-2xl border border-green/10 p-5 mb-5">
+    <p class="text-xs font-semibold text-green-dark mb-3">Verify your email with Google *</p>
+    <div id="google-btn"></div>
+    <p id="verified-email-chip" class="hidden mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-green-dark bg-green/10 px-3 py-1.5 rounded-full">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="#1B4B43" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span id="verified-email-text"></span>
+    </p>
+  </div>
+
+  <form id="companion-form" class="bg-white rounded-2xl border border-green/10 p-6 space-y-5">
+
+    <div class="grid sm:grid-cols-2 gap-5">
+      <div>
+        <label class="block text-xs font-medium text-ink/60 mb-1">Full name *</label>
+        <input name="full_name" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green/40">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-ink/60 mb-1">Date of birth *</label>
+        <input name="dob" type="date" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-ink/60 mb-1">Gender *</label>
+        <select name="gender" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+          <option value="">Select</option>
+          <option>Male</option>
+          <option>Female</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-ink/60 mb-1">Phone *</label>
+        <input name="phone" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-ink/60 mb-1">Photo</label>
+        <input name="photo" type="file" accept="image/jpeg,image/png,image/webp" id="photo-input" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        <img id="photo-preview" class="hidden mt-2 w-16 h-16 rounded-full object-cover border border-green/10">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-ink/60 mb-1">City *</label>
+        <input name="city" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+      </div>
+    </div>
+
+    <!-- LOCATION -->
+    <div>
+      <label class="block text-xs font-medium text-ink/60 mb-1">Location *</label>
+      <div class="flex items-center gap-3">
+        <button type="button" id="detect-location-btn" class="text-xs bg-green/10 hover:bg-green/20 text-green-dark font-medium px-3 py-2 rounded-lg transition-colors">
+          Detect my location
+        </button>
+        <span id="location-status" class="text-xs text-ink/50"></span>
+      </div>
+      <input type="hidden" name="latitude" id="latitude-input">
+      <input type="hidden" name="longitude" id="longitude-input">
+    </div>
+
+    <div>
+      <label class="block text-xs font-medium text-ink/60 mb-1">Bio</label>
+      <textarea name="bio" rows="3" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm"></textarea>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-5">
+      <div>
+        <label class="block text-xs font-medium text-ink/60 mb-1">Languages</label>
+        <input name="languages" placeholder="Hindi, English" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-ink/60 mb-1">Skills</label>
+        <input name="skills" placeholder="Self-defense, Karate" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-ink/60 mb-1">Association reference</label>
+        <input name="ngo_reference" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-ink/60 mb-1">Service type</label>
+        <input name="service_type" placeholder="Event companion" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-ink/60 mb-1">Hourly rate (₹) *</label>
+        <input name="hourly_rate" type="number" min="1" step="0.01" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-ink/60 mb-1">Service radius (km)</label>
+        <input name="service_radius_km" type="number" min="1" max="200" value="15" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        <p class="text-[11px] text-ink/40 mt-1">How far you're willing to travel from your location</p>
+      </div>
+    </div>
+
+    <div class="pt-2 border-t border-ink/5">
+      <p class="text-xs font-semibold text-green-dark mb-3">Verification</p>
+      <p class="text-xs text-ink/50 mb-3">Background check, verification status and availability are set by our team after review — not something you fill in here.</p>
+      <div class="grid sm:grid-cols-2 gap-5">
+        <div>
+          <label class="block text-xs font-medium text-ink/60 mb-1">ID proof type *</label>
+          <select name="id_proof_type" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <option value="">Select</option>
+            <option>Aadhar</option>
+            <option>PAN</option>
+            <option>Passport</option>
+            <option>VoterID</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-ink/60 mb-1">ID proof number *</label>
+          <input name="id_proof_number" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        </div>
+      </div>
+    </div>
+
+    <div class="pt-2 border-t border-ink/5">
+      <p class="text-xs font-semibold text-green-dark mb-3">Emergency contact</p>
+      <div class="grid sm:grid-cols-3 gap-5">
+        <div>
+          <label class="block text-xs font-medium text-ink/60 mb-1">Name</label>
+          <input name="emergency_name" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-ink/60 mb-1">Relation</label>
+          <input name="emergency_relation" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-ink/60 mb-1">Phone</label>
+          <input name="emergency_phone" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        </div>
+      </div>
+    </div>
+
+    <p id="form-message" class="hidden text-sm"></p>
+
+    <button type="submit" class="w-full bg-green hover:bg-green-dark text-white font-medium py-3 rounded-lg transition-colors">
+      Submit registration
+    </button>
+  </form>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/join.js') }}"></script>
+{% endblock %}

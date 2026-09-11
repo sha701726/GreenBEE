@@ -1,0 +1,61 @@
+.badge-stitch {
+  background-image: repeating-linear-gradient(45deg, #1C1F1D 0, #1C1F1D 2px, transparent 2px, transparent 8px);
+}
+
+.card-enter {
+  animation: rise .5s ease both;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-enter { animation: none; }
+}
+
+/* ---- Home page: one orchestrated hero load-in (not per-section fades) ---- */
+.hero-in {
+  opacity: 0;
+  animation: hero-rise .7s cubic-bezier(.22,.61,.36,1) forwards;
+}
+.hero-in-1 { animation-delay: .08s; }
+.hero-in-2 { animation-delay: .16s; }
+.hero-in-3 { animation-delay: .26s; }
+.hero-in-4 { animation-delay: .38s; }
+
+@keyframes hero-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- How-it-works: the one true sequence gets a connecting line that draws
+   itself in on scroll, plus a slight stagger on its four nodes ---- */
+#steps-line {
+  transition: transform 1.1s cubic-bezier(.22,.61,.36,1);
+}
+#steps-line.drawn { transform: scaleX(1) !important; }
+
+.step-node {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .5s ease, transform .5s ease;
+}
+.step-node.in-view { opacity: 1; transform: translateY(0); }
+.step-node:nth-child(2) { transition-delay: .12s; }
+.step-node:nth-child(3) { transition-delay: .24s; }
+.step-node:nth-child(4) { transition-delay: .36s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-in { animation: none; opacity: 1; }
+  #steps-line { transition: none; }
+  .step-node { opacity: 1; transform: none; transition: none; }
+}
+
+html {
+  scroll-padding-top: 5rem; /* so anchor jumps land below the sticky header */
+}
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
