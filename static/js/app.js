@@ -5,15 +5,44 @@ let pendingCredential = null; // Google token, phone-modal confirm hone tak yaha
 
 // ---------------- GOOGLE SIGN-IN ----------------
 window.onload = () => {
+  restoreSession();  // pehle se logged-in hai to login/signup dobara nahi maangna
+
   google.accounts.id.initialize({
     client_id: GOOGLE_CLIENT_ID,
     callback: handleGoogleCredential
   });
-  google.accounts.id.renderButton(document.getElementById("google-btn"), { theme: "outline", size: "medium" });
+  // Chhoti screen (phone) par header mein jagah kam hoti hai - sirf icon wala compact Google button
+  const compact = window.matchMedia("(max-width: 639px)").matches;
+  google.accounts.id.renderButton(
+    document.getElementById("google-btn"),
+    compact ? { type: "icon", shape: "circle", theme: "outline", size: "medium" }
+            : { theme: "outline", size: "medium" }
+  );
 };
+
+// Sign-in/signup ke waqt location maangta hai (browser permission prompt)
+function requestSigninLocation() {
+  const statusEl = document.getElementById("signin-location-status");
+  if (!navigator.geolocation) {
+    statusEl.textContent = "Geolocation is not supported by this browser.";
+    return;
+  }
+  statusEl.textContent = "Locating...";
+  navigator.geolocation.getCurrentPosition((pos) => {
+    currentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    statusEl.textContent = `Location set (${pos.coords.latitude.toFixed(3)}, ${pos.coords.longitude.toFixed(3)})`;
+  }, () => {
+    currentLocation = null;
+    statusEl.textContent = "Location denied — browser settings mein allow karke retry karo.";
+  }, { enableHighAccuracy: true, timeout: 15000 });
+}
+
+document.getElementById("signin-locate-btn").addEventListener("click", requestSigninLocation);
 
 function handleGoogleCredential(response) {
   pendingCredential = response.credential;
+  currentLocation = null;  // har sign-in par fresh location
+  requestSigninLocation();
   document.getElementById("phone-input").value = "";
   document.getElementById("phone-error").classList.add("hidden");
   document.getElementById("phone-modal").classList.remove("hidden");
@@ -36,6 +65,11 @@ document.getElementById("confirm-phone").addEventListener("click", async () => {
     errorEl.classList.remove("hidden");
     return;
   }
+  if (!currentLocation) {
+    errorEl.textContent = "Please allow location access to continue.";
+    errorEl.classList.remove("hidden");
+    return;
+  }
 
   btn.disabled = true;
   btn.textContent = "Signing in...";
@@ -49,8 +83,8 @@ document.getElementById("confirm-phone").addEventListener("click", async () => {
         credential: pendingCredential,
         phone,
         city: "",
-        latitude: currentLocation ? currentLocation.lat : null,
-        longitude: currentLocation ? currentLocation.lng : null
+        latitude: currentLocation.lat,
+        longitude: currentLocation.lng
       })
     });
     const data = await res.json();
@@ -61,12 +95,11 @@ document.getElementById("confirm-phone").addEventListener("click", async () => {
       return;
     }
 
-    currentUser = data;
     document.getElementById("phone-modal").classList.add("hidden");
-    document.getElementById("google-btn").classList.add("hidden");
-    document.getElementById("user-chip").classList.remove("hidden");
-    document.getElementById("user-chip").classList.add("flex");
-    document.getElementById("user-name").textContent = data.name;
+    showSignedInUI(data);
+    lastLocationPush = Date.now();  // sign-in par location already save ho chuki hai
+    startLocationUpdates();
+    loadNearbyCompanions();  // location mil chuki hai, seedha nearby dikha do
 
   } catch (err) {
     errorEl.textContent = "Network error — please try again.";
@@ -74,6 +107,131 @@ document.getElementById("confirm-phone").addEventListener("click", async () => {
   } finally {
     btn.disabled = false;
     btn.textContent = "Continue";
+  }
+});
+
+// ---------------- SESSION (persistent login) ----------------
+function showSignedInUI(data) {
+  currentUser = data;
+  document.getElementById("google-btn").classList.add("hidden");
+  document.getElementById("user-chip").classList.remove("hidden");
+  document.getElementById("user-chip").classList.add("flex");
+  document.getElementById("user-name").textContent = data.name;
+  document.getElementById("mobile-logout-btn").classList.remove("hidden");
+}
+
+function showSignedOutUI() {
+  stopLocationUpdates();
+  currentUser = null;
+  currentLocation = null;
+  document.getElementById("google-btn").classList.remove("hidden");
+  document.getElementById("user-chip").classList.add("hidden");
+  document.getElementById("user-chip").classList.remove("flex");
+  document.getElementById("mobile-logout-btn").classList.add("hidden");
+  document.getElementById("companion-grid").innerHTML = "";
+  document.getElementById("results-heading").classList.add("hidden");
+  document.getElementById("empty-state").classList.add("hidden");
+}
+
+// Server session expire/invalid ho gaya - user ko wapas sign-in state mein le aao
+function handleSessionExpired() {
+  showSignedOutUI();
+  showToast("Session expire ho gaya — please sign in again.", "error");
+}
+
+async function restoreSession() {
+  try {
+    const res = await fetch("/api/me");
+    const data = await res.json();
+    if (!data.logged_in) return;
+
+    showSignedInUI(data);
+    // Fresh location lo + DB mein save karo, phir nearby companions dikhao
+    const ok = await pushLocation();
+    if (ok) {
+      loadNearbyCompanions();
+    } else if (currentUser) {
+      document.getElementById("location-status").textContent =
+        "Allow location access to see companions near you.";
+    }
+    startLocationUpdates();
+  } catch (err) {
+    // network/server issue - user normal sign-in button se aage badh sakta hai
+  }
+}
+
+async function logoutCustomer() {
+  try {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: "customer" })
+    });
+  } catch (err) { /* local UI phir bhi sign-out kar do */ }
+  if (window.google && google.accounts && google.accounts.id) {
+    google.accounts.id.disableAutoSelect();
+  }
+  showSignedOutUI();
+}
+
+document.getElementById("logout-btn").addEventListener("click", logoutCustomer);
+document.getElementById("mobile-logout-btn").addEventListener("click", logoutCustomer);
+
+// ---------------- LIVE LOCATION UPDATE (har 5 minute) ----------------
+const LOCATION_UPDATE_MS = 5 * 60 * 1000;
+let locationTimer = null;
+let lastLocationPush = 0;
+
+function getPosition() {
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, reject,
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
+  });
+}
+
+// Current location leke DB mein save karta hai. Success par true, warna false.
+async function pushLocation() {
+  if (!currentUser || !navigator.geolocation) return false;
+
+  let pos;
+  try {
+    pos = await getPosition();
+  } catch (err) {
+    return false;  // permission denied / GPS unavailable - agli baar phir try hoga
+  }
+  currentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+
+  try {
+    const res = await fetch("/api/customer/location", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ latitude: currentLocation.lat, longitude: currentLocation.lng })
+    });
+    if (res.status === 401) { handleSessionExpired(); return false; }
+    if (!res.ok) return false;
+    lastLocationPush = Date.now();
+    return true;
+  } catch (err) {
+    return false;  // network error - agli baar retry
+  }
+}
+
+function startLocationUpdates() {
+  stopLocationUpdates();
+  locationTimer = setInterval(pushLocation, LOCATION_UPDATE_MS);
+}
+
+function stopLocationUpdates() {
+  if (locationTimer) clearInterval(locationTimer);
+  locationTimer = null;
+}
+
+// Background tab mein browser timers slow kar deta hai - tab wapas khulne par
+// agar 5 minute se zyada ho gaye hain to turant location refresh karo.
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && currentUser &&
+      Date.now() - lastLocationPush >= LOCATION_UPDATE_MS) {
+    pushLocation();
   }
 });
 
@@ -131,7 +289,7 @@ async function loadNearbyCompanions() {
            class="companion-photo w-11 h-11 rounded-full object-cover border border-green/10 cursor-pointer hover:opacity-85 hover:ring-2 hover:ring-green/40 transition">`
       : `<div class="w-11 h-11 rounded-full bg-green/10 flex items-center justify-center text-green-dark font-display font-semibold text-sm">${initial}</div>`;
     card.innerHTML = `
-      <div class="flex items-start justify-between mb-3">
+      <div class="flex items-start justify-between gap-2 mb-3">
         <div class="flex items-center gap-3">
           ${photoHtml}
           <div>
@@ -301,7 +459,6 @@ document.getElementById("confirm-booking").addEventListener("click", async () =>
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        customer_id: currentUser.customer_id,
         companion_id: selectedCompanion.id,
         start_time: start + ":00",
         end_time: end + ":00"
@@ -315,6 +472,13 @@ document.getElementById("confirm-booking").addEventListener("click", async () =>
       // Server se JSON ki jagah kuch aur aaya (jaise HTML error page) - user ko blank screen
       // dikhne ke bajaye clear message milna chahiye
       throw new Error("Server se unexpected response mila. Please try again.");
+    }
+
+    if (res.status === 401) {
+      document.getElementById("booking-modal").classList.add("hidden");
+      document.getElementById("booking-modal").classList.remove("flex");
+      handleSessionExpired();
+      return;
     }
 
     if (!res.ok || result.error) {
