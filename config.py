@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -6,6 +7,15 @@ load_dotenv()
 
 class Config:
     SECRET_KEY = os.getenv("FLASK_SECRET_KEY", "dev-key")
+
+    # ---- Login session (customer + companion) ----
+    # Session cookie signed hoti hai SECRET_KEY se - production mein FLASK_SECRET_KEY zaroor set karo
+    # (aur saare gunicorn workers par same rakho), warna koi bhi session forge kar sakta hai.
+    PERMANENT_SESSION_LIFETIME = timedelta(days=30)   # 30 din tak login bana rahega
+    SESSION_COOKIE_HTTPONLY = True                    # JS se cookie read nahi hoti
+    SESSION_COOKIE_SAMESITE = "Lax"                   # cross-site POST par cookie nahi jaati (CSRF safety)
+    # Render (https) par SESSION_COOKIE_SECURE=true set karo; local http par false rehne do
+    SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "false").strip().lower() == "true"
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 
     # Do .env styles support karte hain:
