@@ -8,7 +8,7 @@ Run:
 
 from datetime import date
 
-from flask import Flask, request, jsonify, render_template, Response
+from flask import Flask, request, jsonify, render_template, Response, session, redirect, url_for
 from mysql.connector import Error
 
 from config import Config
@@ -20,6 +20,38 @@ app.config.from_object(Config)
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5 MB - photo uploads ki safety limit
 
 ALLOWED_PHOTO_TYPES = {"image/jpeg", "image/png", "image/webp"}
+
+if Config.SECRET_KEY == "dev-key":
+    print("⚠️  FLASK_SECRET_KEY set nahi hai - dev-key use ho raha hai. "
+          "Production mein .env / Render mein strong secret key zaroor set karo (sessions ke liye).")
+
+
+# ---------------- SESSION HELPERS ----------------
+def current_customer():
+    """
+    Session se logged-in customer (dict) ya None.
+    Suspended/Blacklisted ya delete ho chuke customer ka session turant hata deta hai.
+    """
+    customer_id = session.get("customer_id")
+    if not customer_id:
+        return None
+    customer = db.get_customer_by_id(customer_id)
+    if not customer or customer["status"] != "Active":
+        session.pop("customer_id", None)
+        return None
+    return customer
+
+
+def parse_coords(latitude, longitude):
+    """(lat, lng) floats return karta hai, invalid/missing par None."""
+    try:
+        latitude = float(latitude)
+        longitude = float(longitude)
+    except (TypeError, ValueError):
+        return None
+    if not (-90 <= latitude <= 90 and -180 <= longitude <= 180):
+        return None
+    return latitude, longitude
 
 
 # ---------------- PAGE ----------------
@@ -35,6 +67,12 @@ def join():
 
 @app.route("/companion/status/<int:companion_id>")
 def companion_status_page(companion_id):
+    # Sirf logged-in companion apna hi status page dekh sakta hai
+    logged_in_id = session.get("companion_id")
+    if not logged_in_id:
+        return redirect(url_for("home"))
+    if logged_in_id != companion_id:
+        return redirect(url_for("companion_status_page", companion_id=logged_in_id))
     return render_template("companion_status.html", companion_id=companion_id)
 
 
@@ -90,6 +128,10 @@ def register_companion():
             return jsonify({"error": "Is email se pehle se ek companion registered hai"}), 409
 
         companion_id = db.create_companion(data, photo_bytes=photo_bytes, photo_type=photo_type)
+
+        # Register karte hi companion logged-in ho jaata hai (Google se email already verify hai)
+        session.permanent = True
+        session["companion_id"] = companion_id
         return jsonify({"companion_id": companion_id, "message": "Registered — verification pending"})
 
     except Error as e:
@@ -112,6 +154,9 @@ def get_companion_photo(companion_id):
 # ---------------- API: COMPANION AVAILABILITY (Show/Hide) ----------------
 @app.route("/api/companions/<int:companion_id>/availability", methods=["POST"])
 def set_companion_availability(companion_id):
+    if session.get("companion_id") != companion_id:
+        return jsonify({"error": "Please sign in as this companion"}), 401
+
     data = request.get_json(force=True)
     show = data.get("is_available")
     if show is None:
@@ -135,6 +180,9 @@ def set_companion_availability(companion_id):
 
 @app.route("/api/companions/<int:companion_id>/status", methods=["GET"])
 def get_companion_status(companion_id):
+    if session.get("companion_id") != companion_id:
+        return jsonify({"error": "Please sign in as this companion"}), 401
+
     try:
         result = db.get_companion_status(companion_id)
         if not result:
@@ -179,6 +227,12 @@ def google_auth():
     if not token:
         return jsonify({"error": "Google token missing"}), 400
 
+    # Location signup aur signin dono par zaroori hai
+    coords = parse_coords(latitude, longitude)
+    if not coords:
+        return jsonify({"error": "Location zaroori hai — please location access allow karo"}), 400
+    latitude, longitude = coords
+
     google_data = auth.verify_google_token(token)
     if not google_data:
         return jsonify({"error": "Invalid or unverified Google account"}), 401
@@ -186,14 +240,68 @@ def google_auth():
     try:
         existing = db.find_customer_by_google_id(google_data["google_id"])
         if existing:
+            if existing["status"] != "Active":
+                return jsonify({"error": "Ye account active nahi hai"}), 403
+            db.update_customer_location(existing["customer_id"], latitude, longitude)
+            session.permanent = True
+            session["customer_id"] = existing["customer_id"]
             return jsonify({"customer_id": existing["customer_id"], "name": existing["full_name"]})
+
+        if not phone.strip():
+            return jsonify({"error": "Phone number zaroori hai"}), 400
 
         customer_id = db.create_customer(
             google_data["name"], phone, google_data["email"], google_data["google_id"],
             city, latitude, longitude
         )
+        session.permanent = True
+        session["customer_id"] = customer_id
         return jsonify({"customer_id": customer_id, "name": google_data["name"]})
 
+    except Error as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ---------------- API: SESSION (me / logout / customer location) ----------------
+@app.route("/api/me", methods=["GET"])
+def me():
+    """Page load par frontend yahan se puchta hai - customer ka session valid hai ya nahi."""
+    try:
+        customer = current_customer()
+    except Error as e:
+        return jsonify({"error": str(e)}), 500
+    if not customer:
+        return jsonify({"logged_in": False})
+    return jsonify({"logged_in": True, "customer_id": customer["customer_id"], "name": customer["full_name"]})
+
+
+@app.route("/api/auth/logout", methods=["POST"])
+def logout():
+    data = request.get_json(silent=True) or {}
+    role = data.get("role")
+    if role == "customer":
+        session.pop("customer_id", None)
+    elif role == "companion":
+        session.pop("companion_id", None)
+    else:
+        session.clear()
+    return jsonify({"logged_out": True})
+
+
+@app.route("/api/customer/location", methods=["POST"])
+def update_my_location():
+    """Customer ki live location (frontend har 5 minute mein bhejta hai) DB mein save karta hai."""
+    data = request.get_json(force=True)
+    coords = parse_coords(data.get("latitude"), data.get("longitude"))
+    if not coords:
+        return jsonify({"error": "Valid latitude/longitude chahiye"}), 400
+
+    try:
+        customer = current_customer()
+        if not customer:
+            return jsonify({"error": "Please sign in first"}), 401
+        db.update_customer_location(customer["customer_id"], coords[0], coords[1])
+        return jsonify({"updated": True})
     except Error as e:
         return jsonify({"error": str(e)}), 500
 
@@ -222,12 +330,12 @@ def nearby_companions():
 @app.route("/api/bookings", methods=["POST"])
 def create_booking():
     data = request.get_json(force=True)
-    customer_id = data.get("customer_id")
+    # customer_id ab client se nahi liya jaata - session se aata hai (koi doosre ke naam se book na kar sake)
     companion_id = data.get("companion_id")
     start_time = data.get("start_time")
     end_time = data.get("end_time")
 
-    if not all([customer_id, companion_id, start_time, end_time]):
+    if not all([companion_id, start_time, end_time]):
         return jsonify({"error": "Missing fields"}), 400
 
     # Future booking option poori tarah hata di gayi hai - booking_date client se
@@ -235,8 +343,12 @@ def create_booking():
     booking_date = date.today().isoformat()
 
     try:
+        customer = current_customer()
+        if not customer:
+            return jsonify({"error": "Please sign in first"}), 401
+
         result = db.create_booking_atomic(
-            companion_id, customer_id, booking_date, start_time, end_time
+            companion_id, customer["customer_id"], booking_date, start_time, end_time
         )
         return jsonify(result)
 
