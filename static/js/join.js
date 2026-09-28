@@ -98,8 +98,14 @@ document.getElementById("companion-form").addEventListener("submit", async (e) =
       return;
     }
 
-    messageEl.textContent = "✅ Registered! Our team will verify your profile before it goes live.";
+    messageEl.textContent = "✅ Registered! Our team will verify your profile before it goes live. ";
     messageEl.className = "text-sm text-green-dark font-medium";
+    // Server ne session bana diya hai - seedha apne availability page par ja sakte hain
+    const statusLink = document.createElement("a");
+    statusLink.href = `/companion/status/${result.companion_id}`;
+    statusLink.textContent = "Go to my availability page →";
+    statusLink.className = "underline";
+    messageEl.appendChild(statusLink);
     messageEl.classList.remove("hidden");
     form.reset();
     document.getElementById("location-status").textContent = "";
