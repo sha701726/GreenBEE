@@ -63,6 +63,22 @@ def find_customer_by_google_id(google_id):
             conn.close()
 
 
+def get_customer_by_id(customer_id):
+    """Session se aaye customer_id ko verify/load karne ke liye (naam + status)."""
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT customer_id, full_name, status FROM customer WHERE customer_id = %s",
+            (customer_id,)
+        )
+        return cursor.fetchone()
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
+
+
 def create_customer(name, phone, email, google_id, city, latitude, longitude):
     conn = None
     try:
@@ -76,6 +92,22 @@ def create_customer(name, phone, email, google_id, city, latitude, longitude):
         )
         conn.commit()
         return cursor.lastrowid
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
+
+
+def update_customer_location(customer_id, latitude, longitude):
+    """Existing customer ki location sign-in par refresh karta hai."""
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE customer SET latitude = %s, longitude = %s WHERE customer_id = %s",
+            (latitude, longitude, customer_id)
+        )
+        conn.commit()
     finally:
         if conn and conn.is_connected():
             conn.close()
