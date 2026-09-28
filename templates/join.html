@@ -3,16 +3,16 @@
 {% block content %}
 
 <header class="border-b border-green/10">
-  <div class="max-w-3xl mx-auto px-6 py-5 flex items-center gap-2">
-    <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="GreenBEE" class="h-16 w-auto object-contain">
-    <span class="font-display font-extrabold text-2xl tracking-tight"><span class="text-green">Green</span><span class="text-ink">BEE</span></span>
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 py-3 sm:py-5 flex items-center gap-2">
+    <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="GreenBEE" class="h-12 sm:h-16 w-auto object-contain">
+    <span class="font-display font-extrabold text-xl sm:text-2xl tracking-tight"><span class="text-green">Green</span><span class="text-ink">BEE</span></span>
     <a href="/" class="ml-auto text-sm text-green-dark font-medium hover:text-green transition-colors">Back to home</a>
   </div>
 </header>
 
-<section class="max-w-3xl mx-auto px-6 pt-14 pb-24">
+<section class="max-w-3xl mx-auto px-4 sm:px-6 pt-8 sm:pt-14 pb-16 sm:pb-24">
   <p class="uppercase tracking-[0.2em] text-xs text-green font-semibold mb-3">Association-trained companions</p>
-  <h1 class="font-display font-bold text-3xl text-green-dark mb-2">Register as a companion</h1>
+  <h1 class="font-display font-bold text-2xl sm:text-3xl text-green-dark mb-2">Register as a companion</h1>
   <p class="text-ink/60 mb-10 max-w-lg">
     Fill in your details below. Your profile stays hidden from clients until our team
     completes background verification.
@@ -28,7 +28,7 @@
     </p>
   </div>
 
-  <form id="companion-form" class="bg-white rounded-2xl border border-green/10 p-6 space-y-5">
+  <form id="companion-form" class="bg-white rounded-2xl border border-green/10 p-4 sm:p-6 space-y-5">
 
     <div class="grid sm:grid-cols-2 gap-5">
       <div>
