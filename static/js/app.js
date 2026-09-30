@@ -39,16 +39,89 @@ function requestSigninLocation() {
 
 document.getElementById("signin-locate-btn").addEventListener("click", requestSigninLocation);
 
-function handleGoogleCredential(response) {
+// Google se credential milte hi pehle server se role check hota hai (Companion / Customer / New)
+async function handleGoogleCredential(response) {
   pendingCredential = response.credential;
   currentLocation = null;  // har sign-in par fresh location
-  requestSigninLocation();
+  showToast("Checking your account...");
+
+  try {
+    const pos = await getPosition();
+    currentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+  } catch (err) {
+    currentLocation = null;  // denied - existing user ko server location error dega, new user role choose kar sakta hai
+  }
+
+  try {
+    const res = await fetch("/api/auth/google", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        credential: pendingCredential,
+        latitude: currentLocation ? currentLocation.lat : null,
+        longitude: currentLocation ? currentLocation.lng : null
+      })
+    });
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      showToast(data.error || "Something went wrong, please try again.", "error");
+      pendingCredential = null;
+      return;
+    }
+
+    if (data.role === "companion") {
+      // Companion already registered - location server par update ho chuki hai, seedha status page
+      window.location.href = `/companion/status/${data.companion_id}`;
+    } else if (data.role === "customer") {
+      showSignedInUI(data);
+      lastLocationPush = Date.now();
+      startLocationUpdates();
+      loadNearbyCompanions();
+    } else {
+      openRoleModal();  // new user - Companion ya Customer choose karwao
+    }
+  } catch (err) {
+    showToast("Network error — please try again.", "error");
+    pendingCredential = null;
+  }
+}
+
+// ---------------- NEW USER: ROLE CHOICE ----------------
+function openRoleModal() {
+  document.getElementById("role-modal").classList.remove("hidden");
+  document.getElementById("role-modal").classList.add("flex");
+}
+
+function closeRoleModal() {
+  document.getElementById("role-modal").classList.add("hidden");
+  document.getElementById("role-modal").classList.remove("flex");
+}
+
+document.getElementById("role-companion-btn").addEventListener("click", () => {
+  window.location.href = "/join";  // existing companion registration
+});
+
+document.getElementById("role-customer-btn").addEventListener("click", () => {
+  closeRoleModal();
+  // Purana customer flow: phone modal -> /api/auth/google (phone ke saath)
   document.getElementById("phone-input").value = "";
   document.getElementById("phone-error").classList.add("hidden");
+  if (currentLocation) {
+    document.getElementById("signin-location-status").textContent =
+      `Location set (${currentLocation.lat.toFixed(3)}, ${currentLocation.lng.toFixed(3)})`;
+  } else {
+    requestSigninLocation();
+  }
   document.getElementById("phone-modal").classList.remove("hidden");
   document.getElementById("phone-modal").classList.add("flex");
   document.getElementById("phone-input").focus();
-}
+});
+
+document.getElementById("role-cancel-btn").addEventListener("click", () => {
+  closeRoleModal();
+  pendingCredential = null;
+});
 
 document.getElementById("cancel-phone").addEventListener("click", () => {
   document.getElementById("phone-modal").classList.add("hidden");

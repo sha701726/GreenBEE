@@ -63,6 +63,19 @@ def find_customer_by_google_id(google_id):
             conn.close()
 
 
+def find_customer_by_email(email):
+    """Google email se customer dhundhta hai (role detection ke liye)."""
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM customer WHERE email = %s", (email,))
+        return cursor.fetchone()
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
+
+
 def get_customer_by_id(customer_id):
     """Session se aaye customer_id ko verify/load karne ke liye (naam + status)."""
     conn = None
@@ -132,6 +145,23 @@ def find_companion_by_email(email):
             FROM companion WHERE email = %s
         """, (email,))
         return cursor.fetchone()
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
+
+
+def update_companion_location(companion_id, latitude, longitude):
+    """Existing companion ki location Google sign-in par refresh karta hai.
+    Sirf lat/lng badalta hai - is_available (Show/Hide) ko touch nahi karta."""
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE companion SET latitude = %s, longitude = %s WHERE companion_id = %s",
+            (latitude, longitude, companion_id)
+        )
+        conn.commit()
     finally:
         if conn and conn.is_connected():
             conn.close()

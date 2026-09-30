@@ -217,46 +217,78 @@ def list_companions():
 # ---------------- API: GOOGLE AUTH ----------------
 @app.route("/api/auth/google", methods=["POST"])
 def google_auth():
+    """
+    Google Sign-In: pehle role detect karta hai (email se), phir:
+      - Companion  -> companion ki location update + companion session   (role="companion")
+      - Customer   -> customer ki location update + customer session     (role="customer")
+      - New user   -> kuch save nahi hota, frontend role poochta hai      (role="new_user")
+                      Customer choose kare -> yahi endpoint phone ke saath dobara hit hota hai
+                      (purana signup flow, unchanged). Companion choose kare -> /join.
+    """
     data = request.get_json(force=True)
     token = data.get("credential")
-    phone = data.get("phone", "")
+    phone = data.get("phone", "") or ""
     city = data.get("city", "")
-    latitude = data.get("latitude")
-    longitude = data.get("longitude")
 
     if not token:
         return jsonify({"error": "Google token missing"}), 400
-
-    # Location signup aur signin dono par zaroori hai
-    coords = parse_coords(latitude, longitude)
-    if not coords:
-        return jsonify({"error": "Location zaroori hai — please location access allow karo"}), 400
-    latitude, longitude = coords
 
     google_data = auth.verify_google_token(token)
     if not google_data:
         return jsonify({"error": "Invalid or unverified Google account"}), 401
 
+    coords = parse_coords(data.get("latitude"), data.get("longitude"))
+    email = google_data["email"]
+    no_location = (jsonify({"error": "Location zaroori hai — please location access allow karo"}), 400)
+
     try:
-        existing = db.find_customer_by_google_id(google_data["google_id"])
-        if existing:
-            if existing["status"] != "Active":
+        companion = db.find_companion_by_email(email)
+        customer = (db.find_customer_by_google_id(google_data["google_id"])
+                    or db.find_customer_by_email(email))
+        customer_active = bool(customer) and customer["status"] == "Active"
+
+        # ---- 1) Existing Companion: sirf location update, register/login dobara nahi ----
+        if companion:
+            if companion["status"] in ("Suspended", "Blacklisted"):
                 return jsonify({"error": "Ye account active nahi hai"}), 403
-            db.update_customer_location(existing["customer_id"], latitude, longitude)
+            if not coords:
+                return no_location
+            db.update_companion_location(companion["companion_id"], coords[0], coords[1])
             session.permanent = True
-            session["customer_id"] = existing["customer_id"]
-            return jsonify({"customer_id": existing["customer_id"], "name": existing["full_name"]})
+            session["companion_id"] = companion["companion_id"]
+            # Same email customer bhi hai to uski location bhi sahi record mein update
+            if customer_active:
+                db.update_customer_location(customer["customer_id"], coords[0], coords[1])
+                session["customer_id"] = customer["customer_id"]
+            return jsonify({"role": "companion", "companion_id": companion["companion_id"],
+                            "name": companion["full_name"]})
 
+        # ---- 2) Existing Customer: location update + purana sign-in ----
+        if customer:
+            if not customer_active:
+                return jsonify({"error": "Ye account active nahi hai"}), 403
+            if not coords:
+                return no_location
+            db.update_customer_location(customer["customer_id"], coords[0], coords[1])
+            session.permanent = True
+            session["customer_id"] = customer["customer_id"]
+            return jsonify({"role": "customer", "customer_id": customer["customer_id"],
+                            "name": customer["full_name"]})
+
+        # ---- 3) New user: role select karwao (phone abhi nahi aaya = pehla check-call) ----
         if not phone.strip():
-            return jsonify({"error": "Phone number zaroori hai"}), 400
+            return jsonify({"role": "new_user", "email": email, "name": google_data["name"]})
 
+        # ---- 4) "Continue as Customer": purana customer signup, unchanged ----
+        if not coords:
+            return no_location
         customer_id = db.create_customer(
-            google_data["name"], phone, google_data["email"], google_data["google_id"],
-            city, latitude, longitude
+            google_data["name"], phone, email, google_data["google_id"],
+            city, coords[0], coords[1]
         )
         session.permanent = True
         session["customer_id"] = customer_id
-        return jsonify({"customer_id": customer_id, "name": google_data["name"]})
+        return jsonify({"role": "customer", "customer_id": customer_id, "name": google_data["name"]})
 
     except Error as e:
         return jsonify({"error": str(e)}), 500
