@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+{% block content %}
+
+<a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:bg-ink focus:text-white focus:text-sm focus:px-4 focus:py-2 focus:rounded-lg">Skip to content</a>
+<noscript><style>.hero-in,.step-node{opacity:1!important;transform:none!important}#steps-line{transform:scaleX(1)!important}</style></noscript>
+
+<!-- HEADER -->
+<header class="sticky top-0 z-40 bg-cloth/90 backdrop-blur border-b border-green/10">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-2 shrink-0">
+      <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="GreenBEE" class="h-10 sm:h-14 w-auto object-contain">
+      <span class="font-display font-extrabold text-lg sm:text-xl tracking-tight"><span class="text-green">Green</span><span class="text-ink">BEE</span></span>
+    </div>
+    <nav class="hidden lg:flex items-center gap-7 text-sm text-ink/70 font-medium">
+      <a href="#about" class="hover:text-green-dark transition-colors">About</a>
+      <a href="#services" class="hover:text-green-dark transition-colors">Services</a>
+      <a href="#how-it-works" class="hover:text-green-dark transition-colors">How it works</a>
+      <a href="#why-us" class="hover:text-green-dark transition-colors">Why us</a>
+      <a href="#contact" class="hover:text-green-dark transition-colors">Contact</a>
+    </nav>
+    <div class="flex items-center gap-2 sm:gap-4 min-w-0">
+      <div id="google-btn" class="shrink-0"></div>
+      <div id="user-chip" class="hidden items-center gap-2 sm:gap-3 text-sm min-w-0">
+        <a href="/dashboard" id="dashboard-link" class="hidden lg:inline text-xs font-medium text-green-dark hover:text-green underline shrink-0">My bookings</a>
+        <span id="user-name" class="font-medium truncate max-w-[4.5rem] sm:max-w-none"></span>
+        <span class="w-2 h-2 rounded-full bg-green shrink-0"></span>
+        <button id="logout-btn" type="button" class="hidden lg:inline text-xs text-ink/50 hover:text-green-dark underline">Logout</button>
+      </div>
+      <button id="menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"
+        class="lg:hidden shrink-0 p-2 -mr-2 rounded-lg text-ink hover:bg-green/10 transition-colors">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile / tablet menu (lg se neeche) -->
+  <nav id="mobile-menu" class="hidden lg:hidden border-t border-green/10 bg-cloth">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-2 flex flex-col text-sm font-medium text-ink/80 divide-y divide-green/10">
+      <a href="#about" class="py-3 hover:text-green-dark">About</a>
+      <a href="#services" class="py-3 hover:text-green-dark">Services</a>
+      <a href="#how-it-works" class="py-3 hover:text-green-dark">How it works</a>
+      <a href="#why-us" class="py-3 hover:text-green-dark">Why us</a>
+      <a href="#contact" class="py-3 hover:text-green-dark">Contact</a>
+      <a href="/dashboard" id="mobile-dashboard-link" class="hidden py-3 font-semibold text-green-dark hover:text-green">My bookings</a>
+      <button id="mobile-logout-btn" type="button" class="hidden text-left py-3 text-ink/60 hover:text-green-dark">Logout</button>
+    </div>
+  </nav>
+</header>
+
+<main id="main">
+
+<!-- HERO -->
+{# Hero banners: static/images/hero/<key>-lg.webp (full banner, desktop) / -sm.webp (mobile crop). Naya banner = 2 files + yahan ek entry #}
+{% set hero = [('restaurant','Friends laughing together at a cafe'),('movies-solo','Heading to the movies alone? Rent a friend'),('shopping','Shopping is better with a friend'),('ride','Long rides are better with company'),('wedding','Weddings are special with friends'),('photography','Photography walk with a buddy'),('gym','Better workouts together'),('running','Running is better with friends'),('studying','Study sessions with a study buddy'),('movies','Movies are better with company'),('hugging','Life feels lighter with a hugging buddy')] %}
+<section id="hero" aria-roledescription="carousel" aria-label="GreenBEE companion outings">
+  {# Banner poori hero ka background hai. lg+ par poori image dikhti hai (uska apna tagline image mein hai),
+     mobile/tablet par tagline wala hissa crop hota hai aur neeche ka H1 + CTA image ke upar fade hokar aata hai. #}
+  <div class="hero-frame">
+    {% for k, alt in hero %}
+    <picture class="hero-slide{{ ' show on' if loop.first }}">
+      <source media="(min-width: 1024px)" srcset="{{ url_for('static', filename='images/hero/' ~ k ~ '-lg.webp') }}" width="1905" height="825">
+      <img src="{{ url_for('static', filename='images/hero/' ~ k ~ '-sm.webp') }}" alt="{{ alt }}" width="860" height="662" draggable="false" decoding="async"
+           {{ 'fetchpriority=high' if loop.first else 'loading=lazy' }}>
+    </picture>
+    {% endfor %}
+    <div id="hero-dots" class="hero-dots">
+      {% for k, alt in hero %}<button type="button" class="hero-dot{{ ' on' if loop.first }}" aria-label="Show slide {{ loop.index }}"></button>{% endfor %}
+    </div>
+  </div>
+
+  <div class="hero-content relative z-10 px-4 sm:px-6 pb-8 sm:pb-10">
+    <div class="max-w-6xl mx-auto">
+      {# lg+ par image apna headline khud dikhati hai, isliye text sirf screen-reader/SEO ke liye rehta hai (lg:sr-only). Dobara dikhana ho to 'lg:sr-only' hata do. #}
+      <div class="hero-copy lg:sr-only max-w-2xl">
+        <p class="hero-in uppercase tracking-[0.25em] text-[11px] sm:text-xs text-green font-semibold mb-2">Rent a Friend, Anytime</p>
+        <h1 class="hero-in hero-in-1 font-display font-extrabold text-2xl sm:text-3xl leading-tight text-ink">
+          Company you can trust, for wherever you're headed today.
+        </h1>
+        <p class="hero-in hero-in-2 mt-3 text-sm sm:text-base text-ink/70 max-w-lg">
+          Our companions are trained in self-defense and martial arts through partner Associations,
+          and every profile carries a verified badge before they ever meet a client.
+        </p>
+      </div>
+
+      <div class="hero-dock mt-5 lg:mt-0">
+        <div class="hero-in hero-in-3 bg-white rounded-2xl shadow-sm border border-green/10 p-4 sm:p-5 flex flex-wrap gap-3 items-center lg:bg-transparent lg:shadow-none lg:border-0 lg:p-0 lg:flex-nowrap lg:shrink-0">
+          <button id="locate-btn" class="w-full sm:w-auto bg-green hover:bg-green-dark text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
+            Find nearby companions
+          </button>
+          <span id="location-status" class="text-xs text-ink/50 min-w-0 empty:hidden lg:max-w-[14rem]"></span>
+        </div>
+        <ul class="hero-in hero-in-4 mt-4 lg:mt-0 flex flex-wrap gap-x-5 gap-y-2 text-xs text-ink/70">
+          {% for t in ['Google-verified sign-in', 'Association self-defense trained', 'Background checked'] %}
+          <li class="flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" class="text-green-dark shrink-0"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.4"/></svg>{{ t }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section class="max-w-6xl mx-auto px-4 sm:px-6 pb-24">
+  <div id="results-heading" class="hidden items-center gap-2 mb-5">
+    <h2 class="font-display font-bold text-xl text-green-dark">Available near you</h2>
+    <span id="results-count" class="text-xs bg-green/10 text-green-dark px-2 py-0.5 rounded-full font-medium"></span>
+  </div>
+  <div id="companion-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+  <p id="empty-state" class="hidden text-ink/50 text-sm mt-6">No verified companions in this radius yet — try widening your search.</p>
+</section>
+
+<!-- ABOUT -->
+<section id="about" class="max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-20 border-t border-green/10">
+  <div class="grid lg:grid-cols-[0.85fr_1.15fr] gap-12 items-start">
+    <h2 class="font-display font-bold text-3xl text-ink leading-tight">
+      Companionship shouldn't feel like a gamble.
+    </h2>
+    <div class="space-y-5 text-ink/70 max-w-2xl">
+      <p>
+        GreenBEE connects you with a companion for the moments you'd rather not spend alone —
+        a wedding, a long train ride, an evening walk, or just someone to talk to over coffee.
+        Every companion works with us through a partner Association, so the relationship comes with
+        structure and accountability on both sides.
+      </p>
+      <p>
+        Before a profile ever appears in search results, we check the ID that was submitted,
+        run a background check, and confirm self-defense training. Clients sign in with Google
+        so companions know exactly who they're meeting.
+      </p>
+      <div class="grid sm:grid-cols-3 gap-4 pt-2">
+        <div class="bg-white rounded-xl border border-green/10 p-4">
+          <p class="font-display font-semibold text-ink text-sm">ID-checked</p>
+          <p class="text-xs text-ink/60 mt-1">Every companion submits a government ID before approval.</p>
+        </div>
+        <div class="bg-white rounded-xl border border-green/10 p-4">
+          <p class="font-display font-semibold text-ink text-sm">Association-trained</p>
+          <p class="text-xs text-ink/60 mt-1">Self-defense and safety training through our partner Associations.</p>
+        </div>
+        <div class="bg-white rounded-xl border border-green/10 p-4">
+          <p class="font-display font-semibold text-ink text-sm">Distance-aware</p>
+          <p class="text-xs text-ink/60 mt-1">Matching respects how far you'll go, and how far they will.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+{% set services = [
+  ('wedding','Event & occasion plus-one','Weddings, parties, reunions — someone polished to walk in beside you.'),
+  ('restaurant','Conversation & company','A patient listener for a coffee, a meal, or a long phone-free evening.'),
+  ('ride','Travel & local guide','Long rides, a new city, or a work trip you would rather not do alone.'),
+  ('gym','Gym buddy','A workout partner for the motivation to actually show up.'),
+  ('running','Running buddy','Morning jogs and evening runs with someone who keeps your pace.'),
+  ('movies-solo','Movies & outings','A film, a museum, a market — company for outings you keep postponing.'),
+  ('shopping','Shopping companion','A second opinion and good company for the mall or the market.'),
+  ('studying','Study partner','Share notes, solve doubts and stay focused together.'),
+  ('photography','Photography buddy','Scenic walks and candid shots with someone who shares the passion.')] %}
+<section id="services" class="bg-white border-t border-b border-green/10">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
+    <div class="max-w-lg mb-8 sm:mb-12">
+      <h2 class="font-display font-bold text-2xl sm:text-3xl text-ink">What you can book a companion for</h2>
+      <p class="mt-3 text-ink/60">Every companion sets their own service type, hourly rate and travel radius. Don't see yours? Browse companions within 4 km and message them directly.</p>
+    </div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+      {% for k, title, text in services %}
+      <article class="overflow-hidden rounded-2xl border border-green/10 bg-cloth">
+        <img src="{{ url_for('static', filename='images/hero/' ~ k ~ '-card.webp') }}" alt="" width="480" height="310" loading="lazy" decoding="async" class="w-full aspect-[3/2] object-cover object-left">
+        <div class="p-4 sm:p-5">
+          <h3 class="font-display font-semibold text-ink">{{ title }}</h3>
+          <p class="text-sm text-ink/60 mt-1.5">{{ text }}</p>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works" class="max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
+  <div class="max-w-lg mb-16">
+    <h2 class="font-display font-bold text-3xl text-ink">How booking actually works</h2>
+    <p class="mt-3 text-ink/60">Four steps, start to finish — no back-and-forth, no phone calls to a call center.</p>
+  </div>
+
+  <div id="steps" class="relative grid sm:grid-cols-2 lg:grid-cols-4 gap-10 sm:gap-8 lg:gap-6">
+    <div class="step-node relative">
+      <div class="w-12 h-12 rounded-full bg-white border-2 border-green flex items-center justify-center font-display font-bold text-green-dark relative z-10">1</div>
+      <h3 class="font-display font-semibold text-ink mt-4">Sign in with Google</h3>
+      <p class="text-sm text-ink/60 mt-1.5">One tap verifies your email — no passwords to remember.</p>
+    </div>
+
+    <div class="step-node relative">
+      <div class="w-12 h-12 rounded-full bg-white border-2 border-green flex items-center justify-center font-display font-bold text-green-dark relative z-10">2</div>
+      <h3 class="font-display font-semibold text-ink mt-4">Find nearby companions</h3>
+      <p class="text-sm text-ink/60 mt-1.5">Tap the button — we'll match your location against theirs within 4km.</p>
+    </div>
+
+    <div class="step-node relative">
+      <div class="w-12 h-12 rounded-full bg-white border-2 border-green flex items-center justify-center font-display font-bold text-green-dark relative z-10">3</div>
+      <h3 class="font-display font-semibold text-ink mt-4">Compare nearby profiles</h3>
+      <p class="text-sm text-ink/60 mt-1.5">See distance, rate, skills and verification status at a glance.</p>
+    </div>
+
+    <div class="step-node relative">
+      <div class="w-12 h-12 rounded-full bg-white border-2 border-green flex items-center justify-center font-display font-bold text-green-dark relative z-10">4</div>
+      <h3 class="font-display font-semibold text-ink mt-4">Book a time today, meet up</h3>
+      <p class="text-sm text-ink/60 mt-1.5">Pick a start and end time for today, confirm, and you're set.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WHY CHOOSE US -->
+<section id="why-us" class="bg-charcoal text-white">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
+    <div class="flex flex-wrap items-end justify-between gap-6 mb-12">
+      <h2 class="font-display font-bold text-3xl">Why people trust GreenBEE</h2>
+      <p class="text-white/50 max-w-sm text-sm">Safety and transparency were the reason this platform exists, not an afterthought.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-x-10 gap-y-8">
+      <div class="flex gap-4">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" class="text-green-light shrink-0 mt-0.5"><path d="M12 3l7 3v5c0 5-3.4 8.5-7 10-3.6-1.5-7-5-7-10V6l7-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <div>
+          <p class="font-display font-semibold">Background-verified profiles</p>
+          <p class="text-sm text-white/55 mt-1">Only companions who've cleared ID and background checks earn the verified badge.</p>
+        </div>
+      </div>
+      <div class="flex gap-4">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" class="text-green-light shrink-0 mt-0.5"><path d="M12 3l2.5 5.5L20 9l-4.2 3.8L17 19l-5-3-5 3 1.2-6.2L4 9l5.5-.5L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <div>
+          <p class="font-display font-semibold">Association self-defense training</p>
+          <p class="text-sm text-white/55 mt-1">Companions are trained through partner Associations before they're approved.</p>
+        </div>
+      </div>
+      <div class="flex gap-4">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" class="text-green-light shrink-0 mt-0.5"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v5l3.5 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <div>
+          <p class="font-display font-semibold">Transparent hourly pricing</p>
+          <p class="text-sm text-white/55 mt-1">Rates are set upfront by the companion — no hidden platform fees.</p>
+        </div>
+      </div>
+      <div class="flex gap-4">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" class="text-green-light shrink-0 mt-0.5"><circle cx="12" cy="10" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M12 21c2-2.5 3-4.6 3-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 21c-2-2.5-3-4.6-3-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <div>
+          <p class="font-display font-semibold">Matching that respects distance</p>
+          <p class="text-sm text-white/55 mt-1">We search a 4km radius around you, they set how far they'll travel — both count.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="relative bg-green overflow-hidden">
+  <img src="{{ url_for('static', filename='images/hero/restaurant-sm.webp') }}" alt="" aria-hidden="true" loading="lazy" decoding="async" class="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-luminosity">
+  <div class="relative max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-14 flex flex-wrap items-center justify-between gap-6">
+    <div>
+      <h2 class="font-display font-bold text-2xl text-white">Trained, verified, and looking for clients?</h2>
+      <p class="text-white/80 mt-1.5 text-sm max-w-md">Register as a companion — your profile stays private until our team completes verification.</p>
+    </div>
+    <a href="/join" class="shrink-0 bg-white text-green-dark font-medium text-sm px-6 py-3 rounded-lg hover:bg-cloth transition-colors">
+      Become a companion
+    </a>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" class="max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
+  <div class="grid lg:grid-cols-2 gap-10">
+    <div>
+      <h2 class="font-display font-bold text-3xl text-ink">Get in touch</h2>
+      <p class="mt-3 text-ink/60 max-w-md">Questions about a booking, a companion profile, or verification — reach out and a real person will reply.</p>
+    </div>
+    <div class="grid sm:grid-cols-2 gap-5">
+      <a href="mailto:sha701726@gmail.com" class="block bg-white rounded-2xl border border-green/10 p-5 hover:border-green/30 transition-colors">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" class="text-green-dark mb-3"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <p class="font-display font-semibold text-ink text-sm">Client support</p>
+        <p class="text-xs text-ink/60 mt-1">support@greenbee.app</p>
+      </a>
+      <a href="mailto:sha701726@gmail.com" class="block bg-white rounded-2xl border border-green/10 p-5 hover:border-green/30 transition-colors">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" class="text-green-dark mb-3"><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 20a8 8 0 0116 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <p class="font-display font-semibold text-ink text-sm">Companion applications</p>
+        <p class="text-xs text-ink/60 mt-1">companions@greenbee.app</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="border-t border-green/10 bg-white">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-12 flex flex-wrap items-start justify-between gap-8">
+    <div class="max-w-xs">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="GreenBEE — Rent a Friend, Anytime" class="h-28 sm:h-36 w-auto object-contain" loading="lazy">
+     <p class="text-xs text-ink/50 mt-2">Association-trained, background-verified companions for whenever you need company.</p>
+    </div>
+    <nav class="flex flex-wrap gap-x-8 gap-y-2 text-sm text-ink/60">
+      <a href="#about" class="hover:text-green-dark transition-colors">About</a>
+      <a href="#services" class="hover:text-green-dark transition-colors">Services</a>
+      <a href="#how-it-works" class="hover:text-green-dark transition-colors">How it works</a>
+      <a href="#why-us" class="hover:text-green-dark transition-colors">Why us</a>
+      <a href="#contact" class="hover:text-green-dark transition-colors">Contact</a>
+      <a href="/join" class="hover:text-green-dark transition-colors">Become a companion</a>
+      <a href="/terms" class="hover:text-green-dark transition-colors">Terms</a>
+      <a href="/privacy" class="hover:text-green-dark transition-colors">Privacy</a>
+    </nav>
+  </div>
+  <div class="border-t border-green/10">
+    <p class="max-w-6xl mx-auto px-4 sm:px-6 py-5 text-xs text-ink/40">&copy; 2026 GreenBEE. All rights reserved.</p>
+  </div>
+</footer>
+
+<!-- BOOKING MODAL -->
+<div id="booking-modal" class="hidden fixed inset-0 bg-ink/40 items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 max-h-[90dvh] overflow-y-auto">
+    <h3 class="font-display text-lg font-semibold mb-1">Book <span id="modal-name" class="text-green-dark"></span></h3>
+    <p class="text-xs text-ink/50 mb-3">₹<span id="modal-rate"></span>/hr &middot; <span id="modal-distance"></span> km away</p>
+    <p class="inline-block text-[11px] font-medium text-green-dark bg-green/10 rounded-lg px-3 py-1.5 mb-3">Booking for today only</p>
+    <div class="flex gap-2 mb-3">
+      <button type="button" data-shift="morning" class="shift-btn flex-1 text-xs font-medium border border-ink/15 rounded-lg py-2 hover:border-green/40 disabled:opacity-40 disabled:cursor-not-allowed">Morning<span class="block text-[10px] font-normal text-ink/50">6 AM – 2 PM</span></button>
+      <button type="button" data-shift="evening" class="shift-btn flex-1 text-xs font-medium border border-ink/15 rounded-lg py-2 hover:border-green/40 disabled:opacity-40 disabled:cursor-not-allowed">Evening<span class="block text-[10px] font-normal text-ink/50">2 PM – 10 PM</span></button>
+    </div>
+    <div class="space-y-3">
+      <div class="flex gap-3">
+        <div class="flex-1">
+          <label class="block text-xs font-medium text-ink/60 mb-1">Start</label>
+          <input id="booking-start" type="time" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div class="flex-1">
+          <label class="block text-xs font-medium text-ink/60 mb-1">End</label>
+          <input id="booking-end" type="time" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        </div>
+      </div>
+    </div>
+    <p id="booking-error" class="hidden text-xs text-red-600 mt-3"></p>
+    <div class="flex gap-3 mt-6">
+      <button id="cancel-booking" class="flex-1 border border-ink/15 rounded-lg py-2.5 text-sm font-medium">Cancel</button>
+      <button id="confirm-booking" class="flex-1 bg-green hover:bg-green-dark text-white rounded-lg py-2.5 text-sm font-medium transition-colors">Confirm booking</button>
+    </div>
+  </div>
+</div>
+
+<!-- ROLE CHOICE MODAL (new Google user: Companion ya Customer) -->
+<div id="role-modal" class="hidden fixed inset-0 bg-ink/40 items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6">
+    <p class="text-xs font-semibold text-green-dark mb-1">Verified with Google ✓</p>
+    <h3 class="font-display text-lg font-semibold mb-1">How would you like to continue?</h3>
+    <p class="text-xs text-ink/50 mb-4">We couldn't find an account with this email yet.</p>
+    <div class="flex flex-col gap-3">
+      <button id="role-companion-btn" type="button" class="w-full bg-green hover:bg-green-dark text-white rounded-lg py-2.5 text-sm font-medium transition-colors">Join as Companion</button>
+      <button id="role-customer-btn" type="button" class="w-full border border-green text-green-dark hover:bg-green/10 rounded-lg py-2.5 text-sm font-medium transition-colors">Continue as Customer</button>
+      <button id="role-cancel-btn" type="button" class="text-xs text-ink/50 hover:text-ink transition-colors">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- PHONE NUMBER MODAL (shown after Google sign-in, replaces native prompt) -->
+<div id="phone-modal" class="hidden fixed inset-0 bg-ink/40 items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 max-h-[90dvh] overflow-y-auto">
+    <p class="text-xs font-semibold text-green-dark mb-1">Verify your email with Google ✓</p>
+    <h3 class="font-display text-lg font-semibold mb-1">Add your phone number</h3>
+    <p class="text-xs text-ink/50 mb-4">We'll use this to send you booking confirmations.</p>
+    <label class="block text-xs font-medium text-ink/60 mb-1">Phone number *</label>
+    <input id="phone-input" type="tel" placeholder="98765 43210" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green/40">
+    <div class="mt-4">
+      <label class="block text-xs font-medium text-ink/60 mb-1">Your location *</label>
+      <div class="flex items-center gap-3">
+        <button type="button" id="signin-locate-btn" class="text-xs bg-green/10 hover:bg-green/20 text-green-dark font-medium px-3 py-2 rounded-lg transition-colors">Allow location</button>
+        <span id="signin-location-status" class="text-xs text-ink/50">Locating...</span>
+      </div>
+      <p class="text-[11px] text-ink/40 mt-1">Needed to show companions near you.</p>
+    </div>
+    <label class="flex items-start gap-2 text-xs text-ink/70 mt-4">
+      <input type="checkbox" id="customer-consent" class="mt-0.5">
+      <span>Main 18+ hoon aur <a href="/terms" target="_blank" class="text-green-dark underline">Terms</a> &amp; <a href="/privacy" target="_blank" class="text-green-dark underline">Privacy Policy</a> se sehmat hoon.</span>
+    </label>
+    <p id="phone-error" class="hidden text-xs text-red-600 mt-2"></p>
+    <div class="flex gap-3 mt-5">
+      <button id="cancel-phone" class="flex-1 border border-ink/15 rounded-lg py-2.5 text-sm font-medium">Cancel</button>
+      <button id="confirm-phone" class="flex-1 bg-green hover:bg-green-dark text-white rounded-lg py-2.5 text-sm font-medium transition-colors">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOOKING SENT (companion ka phone number booking hote hi yahan milta hai) -->
+<div id="success-modal" class="hidden fixed inset-0 bg-ink/40 items-center justify-center p-4 z-[60]">
+  <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 max-h-[90dvh] overflow-y-auto text-center">
+    <div class="mx-auto w-12 h-12 rounded-full bg-green/10 flex items-center justify-center text-green-dark text-2xl mb-3">✓</div>
+    <h3 class="font-display text-lg font-semibold">Booking request sent</h3>
+    <p id="success-summary" class="text-sm text-ink/60 mt-1"></p>
+    <div class="mt-4 rounded-xl bg-green/5 border border-green/15 p-4">
+      <p class="text-xs text-ink/50">Companion ka number</p>
+      <p id="success-name" class="font-display font-semibold mt-0.5"></p>
+      <a id="success-phone" href="#" class="inline-block mt-1 text-lg font-semibold text-green-dark underline break-all"></a>
+    </div>
+    <p class="text-xs text-ink/50 mt-3">Companion accept karega to booking Confirmed ho jayegi. Ye number My bookings me bhi milega.</p>
+    <button id="success-close" type="button" class="mt-5 w-full bg-green hover:bg-green-dark text-white rounded-lg py-2.5 text-sm font-medium transition-colors">Done</button>
+  </div>
+</div>
+
+<!-- REVIEWS -->
+<div id="reviews-modal" class="hidden fixed inset-0 bg-ink/40 items-center justify-center p-4 z-[60]">
+  <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 max-h-[90dvh] overflow-y-auto">
+    <div class="flex items-start justify-between gap-3">
+      <div class="min-w-0">
+        <h3 id="reviews-title" class="font-display text-lg font-semibold truncate"></h3>
+        <p id="reviews-summary" class="text-sm text-ink/60 mt-0.5"></p>
+      </div>
+      <button id="reviews-close" type="button" aria-label="Close" class="shrink-0 -mr-1 p-1 text-ink/50 hover:text-ink text-xl leading-none">&times;</button>
+    </div>
+    <div id="reviews-list" class="mt-4 space-y-3"></div>
+  </div>
+</div>
+
+<!-- PHOTO LIGHTBOX (tap-to-view full companion photo) -->
+<div id="photo-lightbox" class="hidden fixed inset-0 bg-ink/80 items-center justify-center p-4 z-[70] cursor-zoom-out">
+  <img id="lightbox-img" src="" alt="" class="max-w-full max-h-[85vh] rounded-2xl shadow-2xl">
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="{{ url_for('static', filename='js/home-effects.js') }}"></script>
+<script src="{{ url_for('static', filename='js/nav.js') }}"></script>
+{% endblock %}

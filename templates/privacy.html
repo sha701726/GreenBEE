@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Privacy Policy — GreenBEE{% endblock %}
+{% block content %}
+<section class="max-w-2xl mx-auto px-4 sm:px-6 py-12 text-sm leading-relaxed text-ink/80 space-y-4">
+  <a href="/" class="text-green-dark text-sm font-medium">&larr; Back to home</a>
+  <h1 class="font-display font-bold text-2xl text-green-dark">Privacy Policy</h1>
+  <p class="text-xs text-ink/50">Yeh ek standard template hai. Launch se pehle ise kisi lawyer se review karwa lo.</p>
+
+  <h2 class="font-display font-semibold text-base text-ink">1. Hum kaun sa data lete hain</h2>
+  <p><b>Sabhi users:</b> Google account ka naam aur email, phone number, city aur aapki location (latitude/longitude).
+     <b>Companions:</b> date of birth, gender, photo, bio, languages/skills, hourly rate, ID proof ka type aur number
+     (encrypted form me store hota hai), emergency contact. <b>Bookings:</b> date, time, amount, rating/review, reports.</p>
+
+  <h2 class="font-display font-semibold text-base text-ink">2. Data ka use</h2>
+  <p>Aas-paas ke companions dikhane, bookings manage karne, companions ko verify karne, safety (reports/SOS) handle karne aur
+     service sudharne ke liye. Hum aapka data bechte nahi hain.</p>
+
+  <h2 class="font-display font-semibold text-base text-ink">3. Kaun dekh sakta hai</h2>
+  <p>Booking confirm hone par customer aur companion ek-doosre ka phone number dekh sakte hain. Companion ki exact location,
+     ID proof aur emergency contact public nahi hote; ID proof sirf verification ke liye admin team dekhti hai.
+     Safety ke case me ya kanoon ke mutabiq authorities ke saath data share kiya ja sakta hai.</p>
+
+  <h2 class="font-display font-semibold text-base text-ink">4. Location</h2>
+  <p>Location sirf nearby companions dikhane aur bookings ke liye use hoti hai. Browser permission ke bina service use nahi ho sakti.</p>
+
+  <h2 class="font-display font-semibold text-base text-ink">5. Aapke adhikaar</h2>
+  <p>Aap dashboard ke Profile tab me apni details edit kar sakte ho, account deactivate kar sakte ho, ya <b>"Delete my data"</b> se
+     apni personal information hata sakte ho (booking history anonymous form me rehti hai). Active bookings hone par pehle unhe
+     cancel/complete karna hoga.</p>
+
+  <h2 class="font-display font-semibold text-base text-ink">6. Security aur retention</h2>
+  <p>ID proof numbers encrypted store hote hain. Account delete karne ya legal zarurat khatam hone par data hata diya jata hai.</p>
+
+  <h2 class="font-display font-semibold text-base text-ink">7. 18+ only</h2>
+  <p>Service sirf 18 saal ya usse upar ke logon ke liye hai.</p>
+
+  <h2 class="font-display font-semibold text-base text-ink">8. Contact</h2>
+  <p>{% if support_email %}Privacy se jude sawal: <a class="text-green-dark underline" href="mailto:{{ support_email }}">{{ support_email }}</a>{% else %}Privacy se jude sawal ke liye hume site ke Contact section se sampark karo.{% endif %}</p>
+</section>
+{% endblock %}

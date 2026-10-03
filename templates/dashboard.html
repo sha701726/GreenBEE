@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}My dashboard — GreenBEE{% endblock %}
+{% block content %}
+<header class="border-b border-green/10">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-2 min-w-0">
+    <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="GreenBEE" class="h-10 sm:h-12 w-auto object-contain shrink-0">
+    <span class="font-display font-extrabold text-lg sm:text-xl tracking-tight"><span class="text-green">Green</span><span class="text-ink">BEE</span></span>
+    <a href="/" class="ml-auto text-sm text-green-dark font-medium hover:text-green">Back to home</a>
+  </div>
+</header>
+
+<main class="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+  <h1 class="font-display font-bold text-2xl text-green-dark mb-4">My dashboard</h1>
+
+  <div id="role-switch" class="hidden flex-wrap gap-2 mb-4"></div>
+
+  <div class="flex gap-1 sm:gap-2 border-b border-green/10 mb-5 text-sm overflow-x-auto no-scrollbar whitespace-nowrap">
+    <button data-tab="bookings" class="tab-btn px-3 sm:px-4 py-2 font-medium shrink-0">Bookings</button>
+    <button data-tab="notifications" class="tab-btn px-3 sm:px-4 py-2 font-medium shrink-0">Notifications <span id="notif-badge" class="hidden ml-1 text-[10px] bg-green text-white rounded-full px-1.5 py-0.5"></span></button>
+    <button data-tab="profile" class="tab-btn px-3 sm:px-4 py-2 font-medium shrink-0">Profile</button>
+  </div>
+
+  <p id="page-error" class="hidden text-sm text-red-600 mb-3"></p>
+
+  <section id="tab-bookings"></section>
+  <section id="tab-notifications" class="hidden"></section>
+  <section id="tab-profile" class="hidden"></section>
+</main>
+
+<!-- shared modal -->
+<div id="modal" class="hidden fixed inset-0 bg-ink/40 items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-2xl max-w-sm w-full p-5 max-h-[90dvh] overflow-y-auto">
+    <h3 id="modal-title" class="font-display text-lg font-semibold mb-3"></h3>
+    <div id="modal-body" class="text-sm"></div>
+    <p id="modal-error" class="hidden text-xs text-red-600 mt-2"></p>
+    <div class="flex gap-3 mt-4">
+      <button id="modal-cancel" type="button" class="flex-1 border border-ink/15 rounded-lg py-2 text-sm font-medium">Close</button>
+      <button id="modal-ok" type="button" class="flex-1 bg-green hover:bg-green-dark text-white rounded-lg py-2 text-sm font-medium">OK</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

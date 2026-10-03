@@ -1,0 +1,125 @@
+.card-enter {
+  animation: rise .5s ease both;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-enter { animation: none; }
+}
+
+/* ---- Home page: one orchestrated hero load-in (not per-section fades) ---- */
+.hero-in {
+  opacity: 0;
+  animation: hero-rise .7s cubic-bezier(.22,.61,.36,1) forwards;
+}
+.hero-in-1 { animation-delay: .08s; }
+.hero-in-2 { animation-delay: .16s; }
+.hero-in-3 { animation-delay: .26s; }
+.hero-in-4 { animation-delay: .38s; }
+
+@keyframes hero-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- How-it-works: the one true sequence gets a connecting line that draws
+   itself in on scroll, plus a slight stagger on its four nodes ---- */
+#steps-line {
+  transition: transform 1.1s cubic-bezier(.22,.61,.36,1);
+}
+#steps-line.drawn { transform: scaleX(1) !important; }
+
+.step-node {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .5s ease, transform .5s ease;
+}
+.step-node.in-view { opacity: 1; transform: translateY(0); }
+.step-node:nth-child(2) { transition-delay: .12s; }
+.step-node:nth-child(3) { transition-delay: .24s; }
+.step-node:nth-child(4) { transition-delay: .36s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-in { animation: none; opacity: 1; }
+  #steps-line { transition: none; }
+  .step-node { opacity: 1; transform: none; transition: none; }
+}
+
+html {
+  scroll-padding-top: 5rem; /* so anchor jumps land below the sticky header */
+}
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* ---- Hero: banner poori hero ka full-bleed background hai (slider: 12 sec auto, swipe, dots) ---- */
+#hero { position: relative; background: #F7F8F6; }
+.hero-frame { position: relative; width: 100%; overflow: hidden; touch-action: pan-y; user-select: none; -webkit-user-select: none;
+  background: #F7F8F6; aspect-ratio: 860 / 662; max-height: 64svh; min-height: 260px; }
+/* Mobile/tablet: image ka neeche ka hissa page ke colour mein fade hota hai, taaki H1/CTA saaf padhe jaayein */
+.hero-frame::after { content: ""; position: absolute; inset: auto 0 0 0; height: 58%; z-index: 1; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(247,248,246,0) 0%, rgba(247,248,246,.88) 58%, #F7F8F6 100%); }
+.hero-content { margin-top: -3.25rem; }
+.hero-slide { position: absolute; inset: 0; display: none; opacity: 0; transition: opacity 1s ease; pointer-events: none; }
+.hero-slide.show { display: block; }
+.hero-slide.on { opacity: 1; }
+.hero-slide img { width: 100%; height: 100%; object-fit: cover; object-position: center top; -webkit-user-drag: none; }
+.hero-dots { position: absolute; right: .5rem; top: .5rem; z-index: 2; display: flex; align-items: center; max-width: calc(100% - 1rem);
+  padding: 0 .35rem; border-radius: 9999px; background: rgba(255,255,255,.75); backdrop-filter: blur(4px); }
+.hero-dot { position: relative; flex: 0 1 auto; width: 18px; height: 24px; padding: 0; background: none; border: 0; cursor: pointer; transition: width .3s; min-height: 0 !important; }
+.hero-dot::before { content: ""; position: absolute; left: 5px; right: 5px; top: 8px; bottom: 8px; border-radius: 9999px; background: rgba(20,24,26,.3); transition: background .3s; }
+.hero-dot.on { width: 30px; }
+.hero-dot.on::before { background: #1E8449; }
+@media (min-width: 640px) { .hero-dots { right: 1rem; top: 1rem; } .hero-frame { max-height: 560px; } }
+
+/* Desktop (lg+): poori banner image, bina crop. Image ka apna tagline hai, CTA + trust badges neeche ek floating dock mein aate hain */
+@media (min-width: 1024px) {
+  .hero-frame { aspect-ratio: 1905 / 825; max-height: 84svh; min-height: 0; }
+  .hero-frame::after { display: none; }
+  .hero-slide img { object-position: left center; }
+  .hero-content { margin-top: -1.75rem; }
+  .hero-dots { top: auto; bottom: 2.6rem; }
+  .hero-dock { max-width: 56rem; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: .75rem 1.5rem; padding: .85rem 1.25rem; background: rgba(255,255,255,.96); backdrop-filter: blur(8px);
+    border: 1px solid rgba(30,132,73,.12); border-radius: 1rem; box-shadow: 0 12px 32px -12px rgba(20,24,26,.28); }
+}
+@media (prefers-reduced-motion: reduce) { .hero-slide { transition: none; } }
+
+/* ---- Responsive hardening ---- */
+html { -webkit-text-size-adjust: 100%; }
+body { overflow-x: hidden; }
+img, svg, video { max-width: 100%; }
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+@media (pointer: coarse) {
+  button, [role="button"], select, input:not([type="checkbox"]):not([type="radio"]) { min-height: 40px; }
+}
+/* Google sign-in button bahut chhoti screen par header se bahar na jaaye */
+@media (max-width: 380px) {
+  #google-btn { transform: scale(.82); transform-origin: right center; margin-left: -1.5rem; }
+}
+/* Rating stars (picker) */
+.star-btn { font-size: 2rem; line-height: 1; color: #D6D9D4; transition: color .12s, transform .12s; background: none; border: 0; padding: 0 .1rem; cursor: pointer; }
+.star-btn.on { color: #F5B301; }
+.star-btn:hover { transform: scale(1.12); }
+
+/* ---- Location gate (base.html) ---- */
+html.lg-locked, html.lg-locked body { overflow: hidden; }
+#location-gate { position: fixed; inset: 0; z-index: 2147483000; display: flex; align-items: center;
+  justify-content: center; padding: 16px; background: rgba(20,24,26,.92); backdrop-filter: blur(6px); }
+#location-gate[hidden] { display: none; }
+#location-gate .lg-card { background: #fff; color: #14181A; max-width: 400px; width: 100%; border-radius: 18px;
+  padding: 28px 24px; text-align: center; font-family: Inter, system-ui, sans-serif; }
+#location-gate h2 { font-family: Poppins, system-ui, sans-serif; font-size: 20px; font-weight: 600; margin: 8px 0; }
+#location-gate p { font-size: 14px; line-height: 1.5; color: rgba(20,24,26,.7); margin: 0; }
+#location-gate #lg-help { margin-top: 12px; font-size: 12.5px; color: #b42318; }
+#location-gate button { margin-top: 20px; width: 100%; border: 0; border-radius: 10px; padding: 12px;
+  background: #1E8449; color: #fff; font-size: 14px; font-weight: 500; cursor: pointer; }
+#location-gate button:hover { background: #145A30; }
+#location-gate button:disabled { opacity: .6; cursor: wait; }
+.lg-icon { display: flex; justify-content: center; color: #1E8449; }
+.lg-noscript { position: fixed; inset: 0; z-index: 2147483001; background: #fff; padding: 24px; text-align: center; }

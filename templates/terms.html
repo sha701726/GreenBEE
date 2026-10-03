@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Terms of Service — GreenBEE{% endblock %}
+{% block content %}
+<section class="max-w-2xl mx-auto px-4 sm:px-6 py-12 text-sm leading-relaxed text-ink/80 space-y-4">
+  <a href="/" class="text-green-dark text-sm font-medium">&larr; Back to home</a>
+  <h1 class="font-display font-bold text-2xl text-green-dark">Terms of Service</h1>
+  <p class="text-xs text-ink/50">Yeh ek standard template hai. Launch se pehle ise kisi lawyer se review karwa lo.</p>
+
+  <h2 class="font-display font-semibold text-base text-ink">1. Service kya hai</h2>
+  <p>GreenBEE ek platform hai jo customers ko verified companions se milata hai. Sirf <b>platonic, public-place companionship</b>
+     (baat-cheet, ghoomna, events me saath dena jaise kaam). Koi bhi sexual ya illegal activity bilkul allowed nahi hai.</p>
+
+  <h2 class="font-display font-semibold text-base text-ink">2. Eligibility</h2>
+  <p>Customer aur companion dono ki umar kam se kam 18 saal honi chahiye. Galat jaankari dene par account band kiya ja sakta hai.</p>
+
+  <h2 class="font-display font-semibold text-base text-ink">3. Bookings</h2>
+  <p>Booking ek request hoti hai — companion accept kare tab hi confirm hoti hai. Jo request start time tak accept na ho wo
+     automatically cancel ho jati hai. Payment customer aur companion ke beech meeting par seedha hota hai
+     (platform abhi online payment nahi leta). Platform ka commission companion ke payout se adjust hota hai.</p>
+
+  <h2 class="font-display font-semibold text-base text-ink">4. Safety</h2>
+  <p>Hamesha public jagah par milo. Kuch bhi galat lage to dashboard se booking par <b>Report</b> ya <b>SOS</b> use karo, aur
+     emergency me turant <b>112</b> par call karo. SOS ek alert hai — ye police/ambulance ki jagah nahi leta.</p>
+
+  <h2 class="font-display font-semibold text-base text-ink">5. Prohibited behaviour</h2>
+  <p>Harassment, dhamki, no-show, fake profile, platform ke bahar paise ya personal data ki maang, aur kisi bhi illegal kaam par
+     account suspend/blacklist ho sakta hai aur zarurat par authorities ko jaankari di ja sakti hai.</p>
+
+  <h2 class="font-display font-semibold text-base text-ink">6. Verification</h2>
+  <p>Companion ka profile admin verification ke baad hi live hota hai. Verification kisi bhi tarah ki guarantee nahi hai; apni
+     suraksha ka dhyan khud bhi rakho.</p>
+
+  <h2 class="font-display font-semibold text-base text-ink">7. Liability</h2>
+  <p>GreenBEE sirf ek platform hai. Law ke dayre me rehte hue, users ke beech hui meeting se hone wale nuksan ke liye hamari
+     zimmedari seemit hai.</p>
+
+  <h2 class="font-display font-semibold text-base text-ink">8. Changes aur contact</h2>
+  <p>Hum terms badal sakte hain. {% if support_email %}Sawal: <a class="text-green-dark underline" href="mailto:{{ support_email }}">{{ support_email }}</a>.{% endif %}
+     Data ke liye <a href="/privacy" class="text-green-dark underline">Privacy Policy</a> dekho.</p>
+</section>
+{% endblock %}
