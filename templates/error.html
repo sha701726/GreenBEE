@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} — GreenBEE{% endblock %}
+{% block content %}
+<section class="max-w-md mx-auto px-4 py-24 text-center">
+  <p class="font-display font-extrabold text-6xl text-green mb-3">{{ code }}</p>
+  <p class="text-ink/70 mb-6">{{ message }}</p>
+  <a href="/" class="inline-block bg-green hover:bg-green-dark text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">Back to home</a>
+</section>
+{% endblock %}
