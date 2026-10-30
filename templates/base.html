@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{% block title %}GreenBEE — Rent a Friend, Anytime{% endblock %}</title>
+<script src="{{ asset('js/csrf.js') }}"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="icon" type="image/png" href="{{ asset('images/logo-icon.png') }}">
+<meta name="theme-color" content="#1E8449">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
+<link rel="stylesheet" href="{{ asset('css/style.css') }}">
+<link rel="stylesheet" href="{{ asset('css/tailwind.css') }}">
+</head>
+<body class="bg-cloth text-ink font-body"{% if session.get('companion_id') %} data-companion="1"{% endif %}>
+<!-- LOCATION GATE: location permission dene tak poori site block rehti hai -->
+<div id="location-gate" role="dialog" aria-modal="true" aria-labelledby="lg-title">
+  <div class="lg-card">
+    <div class="lg-icon" aria-hidden="true">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+        <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"/>
+        <circle cx="12" cy="10" r="2.5"
+                stroke="currentColor"
+                stroke-width="2"/>
+      </svg>
+    </div>
+    <h2 id="lg-title">Location access required</h2>
+    <p id="lg-msg">Location allow karna zaroori hai.</p>
+    <p id="lg-help" hidden></p>
+    <button id="lg-btn" type="button">Allow location</button>
+  </div>
+</div>
+<noscript><p class="lg-noscript">JavaScript aur location access ke bina GreenBEE use nahi ho sakta.</p></noscript>
+{% block content %}{% endblock %}
+<div id="toast" class="hidden" role="status" aria-live="polite"></div>
+<script src="{{ asset('js/common.js') }}"></script>
+<script>
+  const GOOGLE_CLIENT_ID = "{{ google_client_id }}";
+</script>
+<script src="{{ asset('js/location-gate.js') }}"></script>
+<script src="{{ asset('js/companion-location.js') }}" defer></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

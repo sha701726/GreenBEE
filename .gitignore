@@ -1,0 +1,7 @@
+.env
+__pycache__/
+*.pyc
+environ/
+.vscode/
+backups/
+.pytest_cache/
