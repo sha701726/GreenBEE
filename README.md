@@ -56,10 +56,3 @@ The tagline, "Rent a Friend, Anytime," captures the platform's core promise: a r
 <p align="center"><b>GreenBEE — Because everyone deserves a companion.</b></p>
 
 ---
-
-## Dev notes
-
-- **Companion live location:** `static/js/companion-location.js` har 5 min mein `POST /api/companion/location` bhejta hai (logged-in companion, har page par).
-- **Tailwind CSS:** ab CDN nahi, built file `static/css/tailwind.css`. Naye classes add karne ke baad rebuild:
-  `npx tailwindcss@3.4.17 -c tailwind.config.js -i static/css/tailwind.src.css -o static/css/tailwind.css --minify`
-- **Env:** `DB_POOL_SIZE` (default 4 per worker - Aiven jaise DB ki connection limit ka dhyan rakho), `DB_POOL=false` pool band karne ke liye.
